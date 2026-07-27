@@ -115,7 +115,7 @@ Make sure you have the following installed:
 
 ```
      # Clone repository
-     git clone https://github.com/kishlaykumar990-hue/Ideal-Function-Fitter.git
+     git clone https://github.com/kishlaykumar990-hue/Python-Project.git
 
      # Install dependencies
      pip install -r requirements.txt
