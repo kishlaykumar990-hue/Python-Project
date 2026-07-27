@@ -1,21 +1,21 @@
-﻿# Ideal-Function-Fitter
+# Ideal-Function-Fitter
 
 ## 📌 Project Overview
 
 This repository contains my university project for Semester 1, focused on working with datasets using Python.
 The goal is to:
 
-* Load training and ideal datasets.
+* Load training, ideal, and test datasets.
 
-* Find the ideal functions with the smallest deviation from training data.
+* Find the four ideal functions with the smallest deviation from the training data, using least squares (SSE).
 
-* Test the mapping using a test dataset.
+* Map the test dataset to those functions, using a sqrt(2) deviation threshold.
 
-* Store results in tables & SQLite databases.
+* Store results in tables & a SQLite database.
 
 * Generate visualizations for analysis.
 
-The project demonstrates concepts of data handling, deviation analysis, database usage, and visualization in Python.
+The project demonstrates concepts of data handling, deviation analysis, database usage, exception handling, unit testing, and visualization in Python.
 
 ## 📂 Project Structure
 ```
@@ -33,12 +33,23 @@ The project demonstrates concepts of data handling, deviation analysis, database
 │   ├── main.py
 │   ├── train_loader.py
 │   ├── ideal_loader.py
+│   ├── test_loader.py
 │   ├── deviation_calculator.py
 │   ├── test_handler.py
+│   ├── exceptions.py
 │   └── __init__.py
 │
+├── unit_test/
+│   ├── test_pipeline.py
+│   ├── run_tests.py
+│   ├── fixtures/
+│   │   └── fixture_ideal.csv
+│   └── test_results/
+│       └── Test_Results.txt
+│
 ├── outputs/
-│   ├── comprehensive_visualization.html
+│   ├── test_vs_ideal.html
+│   ├── train_vs_ideal.html
 │   ├── final_table_preview.csv
 │   ├── function_mapping.db
 │   ├── test_deviations_preview.csv
@@ -54,7 +65,7 @@ The project demonstrates concepts of data handling, deviation analysis, database
 ## 📝 Problem Statement
 
 Detailed instructions are available in the assignment file:
-[Task_WrittenAssignment_DLMDSPWP01.pdf](./Problem%20Statement/Task_WrittenAssignment_DLMDSPWP01.pdf)
+[Task_WrittenAssignment_DLMDSPWP01.pdf](./docs/Task_WrittenAssignment_DLMDSPWP01.pdf)
 
 
 
@@ -62,25 +73,29 @@ Detailed instructions are available in the assignment file:
 
 1. Load Data
 
-    * Training and ideal datasets are read from .csv files.
+    * Training, ideal, and test datasets are read directly from `.csv` files (`train_loader.py`, `ideal_loader.py`, `test_loader.py`).
 
-    * Stored into SQLite tables for structured usage.
-   
+    * Raw training and ideal data are stored into SQLite tables.
+
 2. Find Ideal Functions
 
-    * For each training function, the script finds the ideal function with the smallest deviation.
-
-    * Mappings are stored in function_mapping.db.
+    * `deviation_calculator.py` compares each training function against all 50 ideal functions and selects the one with the lowest sum of squared errors (SSE), computed live at runtime.
 
 3. Test Data Handling
 
-    * Test dataset points are checked against the selected ideal functions.
+    * Test dataset points are interpolated against the selected ideal functions and checked against a sqrt(2) deviation threshold (computed live from the training run).
 
-    * Deviations are calculated and stored in CSV/DB.
+    * If no test points can be mapped at all, a custom exception (`MappingErrorHandling`) is raised.
+
+    * Deviations and the final mapping are stored in CSV/DB.
 
 4. Visualization
 
-   Outputs include an interactive HTML visualization (comprehensive_visualization.html) to compare training, ideal, and          test mappings.
+   Two interactive Bokeh charts are generated: `test_vs_ideal.html` (ideal functions + assigned test points) and `train_vs_ideal.html` (raw training data + matched ideal functions), each split into a 2x2 grid (one panel per function) for readability.
+
+5. Unit Tests
+
+   `unit_test/test_pipeline.py` covers the selection logic, threshold logic, final-table mapping, the custom exception, both loaders, and a database round-trip, using small fabricated data.
 
 
 ## ⚙️ Requirements
@@ -89,51 +104,47 @@ Make sure you have the following installed:
 ```
    pandas
    numpy
-   matplotlib
    bokeh
-   sqlite3
+   sqlalchemy
+   pytest
 ```
 
 ## ▶️ Usage
 
    1. Quick Start
-      
+
 ```
      # Clone repository
      git clone https://github.com/kishlaykumar990-hue/Ideal-Function-Fitter.git
 
-
      # Install dependencies
-      pip install -r requirements.txt
-``` 
-   2. Run scripts step by step
+     pip install -r requirements.txt
+```
+   2. Run the program (from the project root folder)
    ```
-     # Step 1: Load training and ideal data
-       python "Python program source code/Loading ideal and train data/train table.py"
-
-     # Step 2: Compute ideal functions with smallest deviation
-       python "Python program source code/Ideal smallest deviation/ideal_deviation_table.py"
-
-     # Step 3: Process test data
-       python "Python program source code/Test handler/final_deviation.py"
+     python3 -m src.main
+```
+   3. Run the unit tests
+   ```
+     python3 unit_test/run_tests.py
 ```
 
-   3. Check outputs
+   4. Check outputs
 
-       * Mappings & deviations in .db and .csv files.
+       * Mappings & deviations in `.db` and `.csv` files inside `outputs/`.
 
-       * Interactive visualization in comprehensive_visualization.html
+       * Interactive visualizations: `outputs/test_vs_ideal.html` and `outputs/train_vs_ideal.html`.
 
 
 ## 📈 Results
 
   The analysis selects 4 optimal ideal functions and maps test data points:
   ```
-    Selected Functions:
-    Y1(training func) -> Y42 with total deviation 34.2466
-    Y2(training func) -> Y41 with total deviation 35.6018
-    Y3(training func) -> Y11 with total deviation 29.8618
-    Y4(training func) -> Y48 with total deviation 31.9634
+    Selected Functions (via least squares / SSE):
+    y1 -> Y13 (SSE ~34.08)
+    y2 -> Y24 (SSE ~33.45)
+    y3 -> Y36 (SSE ~35.57)
+    y4 -> Y40 (SSE ~35.00)
   ```
 
 

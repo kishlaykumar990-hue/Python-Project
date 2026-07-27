@@ -1,5 +1,5 @@
-   pandas
-   numpy
-   matplotlib
-   bokeh
-   sqlite3
+pandas
+numpy
+bokeh
+sqlalchemy
+pytest

@@ -1,0 +1,26 @@
+UNIT TEST RESULTS
+============================================================
+
+Test Case 1: Selector should pick the exact-match function over a clearly wrong one.
+   Result: PASSED
+
+Test Case 2: Threshold should be the largest training deviation times sqrt(2).
+   Result: PASSED
+
+Test Case 3: Deviations should be labeled "within limit" or "crosses limit" correctly.
+   Result: PASSED
+
+Test Case 4: When two functions qualify, the smaller deviation should win.
+   Result: PASSED
+
+Test Case 5: If nothing can be mapped, the custom exception should fire.
+   Result: PASSED
+
+Test Case 6: Loading a missing file should return None, not crash.
+   Result: PASSED
+
+Test Case 7: Ideal CSV columns should be renamed to X, Y1, Y2... regardless of the original names.
+   Result: PASSED
+
+------------------------------------------------------------
+Summary: 7 of 7 tests passed.

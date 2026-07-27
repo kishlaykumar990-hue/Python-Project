@@ -1,61 +1,24 @@
-import pandas as pd
-from sqlalchemy import create_engine, text
-from sqlalchemy.exc import SQLAlchemyError
+from src.exceptions import safe_read_csv, safe_save_to_db
 
 
-class IdealFunctionDatabaseHandler:
-    def __init__(self):
-        db_path = r"C:\Users\Kishl\OneDrive\Documents\college project semester 1 python\outputs\function_mapping.db"
-        self.db_name = db_path
-        self.engine = create_engine(f"sqlite:///{db_path}")
-        print(f"Connected to database: {db_path}")
+class IdealLoader:
+    """Loads ideal.csv (the 50 candidate functions) and saves it to the database."""
 
-    def load_csv(self, filepath):
-        try:
-            df = pd.read_csv(filepath)
-            df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
-            column_names = ['X'] + [f"Y{i}" for i in range(1, 51)]
-            df.columns = column_names
-            print(f"CSV loaded and columns renamed for ideal functions.")
-            return df
-        except Exception as e:
-            print(f"Error loading CSV: {e}")
+    def __init__(self, engine):
+        """Store the shared database engine used to save the ideal functions."""
+        self.engine = engine
+
+    def load_ideal_csv(self, filepath):
+        """Load ideal CSV file directly and rename its columns to X, Y1..Y50."""
+        df = safe_read_csv(filepath, label="ideal CSV")
+        if df is None:
             return None
+        df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
+        n_functions = df.shape[1] - 1
+        df.columns = ['X'] + [f"Y{i}" for i in range(1, n_functions + 1)]
+        print(f"Ideal CSV loaded successfully from {filepath}. Columns: {list(df.columns)}")
+        return df
 
-    def create_table_from_df(self, df, table_name):
-        try:
-            df.to_sql(table_name, con=self.engine, if_exists="replace", index=False)
-            print(f"Table '{table_name}' created successfully.")
-        except SQLAlchemyError as e:
-            print(f"SQLAlchemy Error: {e}")
-        except Exception as e:
-            print(f"Unexpected error: {e}")
-
-    def preview_table(self, table_name, limit=5):
-        query = text(f"SELECT * FROM {table_name} LIMIT {limit}")
-        try:
-            with self.engine.connect() as conn:
-                result = conn.execute(query)
-                rows = result.fetchall()
-                print(f"\n--- Preview: {table_name} ---")
-                for row in rows:
-                    print(row)
-        except SQLAlchemyError as e:
-            print(f"SQLAlchemy error: {e}")
-        except Exception as e:
-            print(f"Unexpected error during query: {e}")
-
-
-# === Usage ===
-if __name__ == "__main__":
-    handler = IdealFunctionDatabaseHandler() 
-    df = handler.load_csv(r"C:\Users\Kishl\OneDrive\Documents\college project semester 1 python\data\ideal.csv")
-    if df is not None:
-        handler.create_table_from_df(df, "ideal_training_table")
-        handler.preview_table("ideal_training_table")
-
-
-
-def load_ideal_data(filepath):
-    db = IdealFunctionDatabaseHandler()
-    return db.load_csv(filepath)
+    def save_to_db(self, df, table_name):
+        """Save the ideal-functions DataFrame to the SQLite database."""
+        safe_save_to_db(df, self.engine, table_name, label="ideal functions")
